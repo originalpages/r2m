@@ -1,7 +1,7 @@
 name: Release
 on:
   push:
-    tags: ['v*']
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']   # not the moving v0 tag used by the Action
 permissions:
   contents: write
 jobs:
