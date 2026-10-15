@@ -1,0 +1,12 @@
+# build output
+/r2m
+/r2m.exe
+/dist/
+*.log
+.DS_Store
+coverage
+
+# web
+web/node_modules
+web/dist
+node_modules
