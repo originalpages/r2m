@@ -1,0 +1,55 @@
+name: r2m
+description: Generate a Mermaid diagram (tree, deps, arch) from your repo and optionally update the README.
+author: r2m
+branding:
+  icon: git-branch
+  color: blue
+inputs:
+  path:
+    description: Folder to analyze
+    default: '.'
+  type:
+    description: Diagram type (tree, deps, arch)
+    default: tree
+  depth:
+    description: Max folder depth
+    default: ''
+  max-nodes:
+    description: Max nodes before collapsing
+    default: ''
+  output:
+    description: File to write the diagram to (Markdown fence is added when it ends in .md)
+    default: ''
+  update-readme:
+    description: 'Set to "true" to update the r2m marker block in README.md'
+    default: 'false'
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@v5
+      with:
+        go-version: stable
+        cache: false
+    - name: Build r2m
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: go build -o "$RUNNER_TEMP/r2m" ./cmd/r2m
+    - name: Generate diagram
+      shell: bash
+      env:
+        R2M_PATH: ${{ inputs.path }}
+        R2M_TYPE: ${{ inputs.type }}
+        R2M_DEPTH: ${{ inputs.depth }}
+        R2M_MAX_NODES: ${{ inputs.max-nodes }}
+        R2M_OUTPUT: ${{ inputs.output }}
+        R2M_UPDATE: ${{ inputs.update-readme }}
+      run: |
+        args=(--no-view --type "$R2M_TYPE")
+        [ -n "$R2M_DEPTH" ] && args+=(--depth "$R2M_DEPTH")
+        [ -n "$R2M_MAX_NODES" ] && args+=(--max-nodes "$R2M_MAX_NODES")
+        if [ -n "$R2M_OUTPUT" ]; then
+          case "$R2M_OUTPUT" in *.md) args+=(--md) ;; esac
+          args+=(--out "$R2M_OUTPUT")
+        fi
+        [ "$R2M_UPDATE" = "true" ] && args+=(--update README.md)
+        "$RUNNER_TEMP/r2m" "${args[@]}" -- "$R2M_PATH"
